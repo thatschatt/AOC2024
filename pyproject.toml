@@ -10,3 +10,6 @@ dependencies = [
 
 [tool.uv.workspace]
 members = ["aoc2024"]
+
+[tool.black]
+line-length = 110
