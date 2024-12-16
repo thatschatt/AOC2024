@@ -25,12 +25,13 @@ struct NodeToVisit
     coord:: CartesianIndex
     dir:: Int32 # can be one of the directions
     cost:: Int32
+    wentstraight:: Bool
 end
 
-function visit_next!(mazemap, visited, visit_list::Vector{NodeToVisit})
-    i = sortperm([v.cost for v in visit_list])
-    visit_list[:] = visit_list[i] # should sort it
-    next_point = popfirst!(visit_list)
+NodeToVisit(coord, dir, cost) = NodeToVisit(coord, dir, cost, true)
+
+function visit_next!(mazemap, visited, visit_list::Vector{NodeToVisit}, wentstraight::Bool)
+    next_point = popat!(visit_list, argmin([v.cost for v in visit_list]))
     if visited[next_point.coord[1], next_point.coord[2], next_point.dir+1] == 2^30
         if mazemap[next_point.coord] == 'E'
             return next_point
@@ -38,14 +39,16 @@ function visit_next!(mazemap, visited, visit_list::Vector{NodeToVisit})
         if mazemap[next_point.coord] == '#'
             return 0
         end
-        mazemap[next_point.coord] = dir_chars[next_point.dir+1]
+        if next_point.wentstraight
+            mazemap[next_point.coord] = dir_chars[next_point.dir+1] # this makes the arrows prettier
+        end
         visited[next_point.coord[1], next_point.coord[2], next_point.dir+1] = next_point.cost # save the cost for part 2
 
-        if visited[next_point.coord[1], next_point.coord[2], (next_point.dir+2)%4+1] == 2^30 # don't turn if we've already been here
-            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+1)%4, next_point.cost+1000)) # turn right
-            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+3)%4, next_point.cost+1000)) # turn left (+3 wraps us round)
+        if (visited[next_point.coord[1], next_point.coord[2], (next_point.dir+2)%4+1] == 2^30) && next_point.wentstraight # don't turn if we've already been here
+            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+1)%4, next_point.cost+1000, false)) # turn right
+            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+3)%4, next_point.cost+1000, false)) # turn left (+3 wraps us round)
         end
-        push!(visit_list, NodeToVisit(next_point.coord + dir_ints[next_point.dir + 1], next_point.dir, next_point.cost+1)) # go straight
+        push!(visit_list, NodeToVisit(next_point.coord + dir_ints[next_point.dir + 1], next_point.dir, next_point.cost+1, true)) # go straight
     end
     return 0
 end
@@ -113,20 +116,20 @@ function go(filename)
             println("done after $n iterations")
             break
         end
-        success = visit_next!(mazemap, visited, visit_list)
+        success = visit_next!(mazemap, visited, visit_list, true)
         if typeof(success) == NodeToVisit && end_node.cost == 0
-            display(mazemap)
-            display(success)
+        #    display(mazemap)
+        #    display(success)
             println("end found after $n iterations. Score = $(success.cost)")
             end_node = success
         end
     end
-    display(mazemap)
+  #  display(mazemap)
     println("Now finding all good points")
 
     s::Set{CartesianIndex} = Set()
     find_best_nodes!(end_node, visited, s)
-    display(s)
+    println("there are $(length(s)) good seats")
 end
 
 # so for part two, I tihnk i can get away with saving the best score for every point, and then recursively
