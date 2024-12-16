@@ -41,8 +41,10 @@ function visit_next!(mazemap, visited, visit_list::Vector{NodeToVisit})
         mazemap[next_point.coord] = dir_chars[next_point.dir+1]
         visited[next_point.coord[1], next_point.coord[2], next_point.dir+1] = next_point.cost # save the cost for part 2
 
-        push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+1)%4, next_point.cost+1000)) # turn right
-        push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+3)%4, next_point.cost+1000)) # turn left (+3 wraps us round)
+        if visited[next_point.coord[1], next_point.coord[2], (next_point.dir+2)%4+1] == 2^30 # don't turn if we've already been here
+            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+1)%4, next_point.cost+1000)) # turn right
+            push!(visit_list, NodeToVisit(next_point.coord, (next_point.dir+3)%4, next_point.cost+1000)) # turn left (+3 wraps us round)
+        end
         push!(visit_list, NodeToVisit(next_point.coord + dir_ints[next_point.dir + 1], next_point.dir, next_point.cost+1)) # go straight
     end
     return 0
@@ -133,4 +135,4 @@ end
 # maybe not even that painful?? I guess I'll have to make sure the mapping is exhastive - run until the visit list is empty?
 
 go("day16/test.txt")
-go("day16/input.txt")
+#go("day16/input.txt")
