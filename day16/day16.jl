@@ -23,8 +23,8 @@ const global dir_ints = [
 # let's use a struct today. Maybe that beats a tutple?
 struct NodeToVisit
     coord:: CartesianIndex
-    dir:: Int # can be one of the directions
-    cost:: Int
+    dir:: Int32 # can be one of the directions
+    cost:: Int32
 end
 
 function visit_next!(mazemap, visited, visit_list::Vector{NodeToVisit})
